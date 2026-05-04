@@ -7,42 +7,55 @@
 
 <!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot }
+  import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc,
+           doc, orderBy, query, serverTimestamp, onSnapshot }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  /* ─── FIREBASE CONFIG ───────────────────────────────────────────────────── */
+  /* ─── FIREBASE CONFIG ─────────────────────────────────────────────────── */
   const firebaseConfig = {
-    apiKey: "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
-    authDomain: "dbrenquiry-manager.firebaseapp.com",
-    projectId: "dbrenquiry-manager",
-    storageBucket: "dbrenquiry-manager.firebasestorage.app",
+    apiKey:            "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
+    authDomain:        "dbrenquiry-manager.firebaseapp.com",
+    projectId:         "dbrenquiry-manager",
+    storageBucket:     "dbrenquiry-manager.firebasestorage.app",
     messagingSenderId: "644794117479",
-    appId: "1:644794117479:web:33b394211bc1c3c41413c2"
+    appId:             "1:644794117479:web:33b394211bc1c3c41413c2"
   };
 
-  const app  = initializeApp(firebaseConfig);
-  const db   = getFirestore(app);  // ← was missing, caused ALL Firebase ops to fail
-  const COL  = "enquiries";
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const COL = "enquiries";
 
-  // expose to window so vanilla JS can call
-  window._db = db;
-  window._col = COL;
-  window._fns = { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot };
+    /* ── Expose to vanilla JS scope ── */
+    window._db  = db;
+    window._col = COL;
+    window._fns = { collection, addDoc, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot };
+    window._firebaseReady = true;
 
-  // Live listener — fires whenever data changes
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
-  onSnapshot(q, snap => {
-    window._enquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (typeof window.renderTable === "function") window.renderTable();
-  }, err => {
-    console.error("Firestore error:", err);
-    // If config not set yet, show demo mode
-    if (err.code === "invalid-argument" || err.message.includes("projectId")) {
-      window._demoMode = true;
-      if (typeof window.renderTable === "function") window.renderTable();
-    }
-  });
+    /* ── Live real-time listener ── */
+    const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+    onSnapshot(q,
+      snap => {
+        window._enquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (typeof window.renderTable === "function") window.renderTable();
+      },
+      err => {
+        console.error("Firestore snapshot error:", err.code, err.message);
+        if (err.code === "permission-denied") {
+          window._permissionError = true;
+          if (typeof window.renderTable === "function") window.renderTable();
+        } else {
+          window._demoMode = true;
+          if (typeof window.renderTable === "function") window.renderTable();
+        }
+      }
+    );
+  } catch (initErr) {
+    console.error("Firebase init error:", initErr);
+    window._demoMode = true;
+    window._firebaseReady = false;
+  }
 </script>
 
 <!-- SheetJS for Excel export -->
@@ -937,6 +950,10 @@
   ───────────────────────────────────────────── */
   window.renderTable = function() {
     if (window._demoMode) { $('demo-notice').style.display = 'block'; }
+    if (window._permissionError) {
+      $('demo-notice').style.display = 'block';
+      $('demo-notice').innerHTML = '<strong>⚠️ Firestore Permission Denied.</strong> Your Firebase project is connected but security rules are blocking access.<br>Go to <strong>Firebase Console → Firestore → Rules</strong> and set:<br><code>allow read, write: if true;</code><br>(then tighten rules before going live)';
+    }
     updateStats();
     refreshMonthFilter();
 
@@ -1040,7 +1057,7 @@
     const nights       = $('f-nights').value;
     const rooms        = $('f-rooms').value;
 
-    if (!date || !name || !contact || !eventDate) {
+    if (!name || !contact || !eventDate) {
       toast('Please fill all required fields (marked with *)', 'error'); return;
     }
 
@@ -1051,22 +1068,41 @@
         ? { checkin, checkout, nights, rooms } : {})
     };
 
-    if (window._demoMode || !window._fns) {
+    /* ── Demo / offline fallback ── */
+    if (window._demoMode || !window._firebaseReady || !window._fns) {
       _demoData.unshift({ id:'d'+(_demoCounter++), ...record, createdAt:{seconds: Date.now()/1000} });
-      toast('Entry added (Demo mode — configure Firebase to save permanently)');
+      toast('Entry saved locally (Demo mode)');
       clearForm();
       renderTable();
       return;
     }
 
+    /* ── Save to Firestore ── */
+    const btn = document.querySelector('.btn-primary');
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ &nbsp;Saving…';
+
     try {
       const { collection, addDoc, serverTimestamp } = window._fns;
-      await addDoc(collection(window._db, window._col), { ...record, createdAt: serverTimestamp() });
-      toast('Enquiry saved successfully!');
+      await addDoc(
+        collection(window._db, window._col),
+        { ...record, createdAt: serverTimestamp() }
+      );
+      toast('Enquiry saved to Firebase!');
       clearForm();
     } catch(err) {
-      console.error(err);
-      toast('Error saving. Check Firebase config.', 'error');
+      console.error('Firestore write error:', err.code, err.message);
+      if (err.code === 'permission-denied') {
+        toast('Permission denied — open Firestore Rules in Firebase Console and set to allow read, write.', 'error');
+      } else if (err.code === 'unavailable' || err.code === 'network-request-failed') {
+        toast('No internet connection. Please check your network and try again.', 'error');
+      } else {
+        toast('Save failed: ' + (err.message || err.code), 'error');
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origText;
     }
   }
 
@@ -1090,7 +1126,7 @@
   async function deleteEntry(id) {
     if (!confirm('Delete this enquiry? This cannot be undone.')) return;
 
-    if (window._demoMode || !window._fns) {
+    if (window._demoMode || !window._firebaseReady || !window._fns) {
       _demoData = _demoData.filter(e => e.id !== id);
       toast('Deleted (Demo mode)'); renderTable(); return;
     }
@@ -1100,7 +1136,12 @@
       await deleteDoc(doc(window._db, window._col, id));
       toast('Enquiry deleted.');
     } catch(err) {
-      toast('Error deleting.', 'error');
+      console.error('Delete error:', err.code, err.message);
+      if (err.code === 'permission-denied') {
+        toast('Permission denied — check Firestore security rules.', 'error');
+      } else {
+        toast('Delete failed: ' + (err.message || err.code), 'error');
+      }
     }
   }
 
@@ -1138,7 +1179,7 @@
       remark:    $('e-remark').value.trim(),
     };
 
-    if (window._demoMode || !window._fns) {
+    if (window._demoMode || !window._firebaseReady || !window._fns) {
       const i = _demoData.findIndex(e => e.id === _editId);
       if (i > -1) _demoData[i] = { ..._demoData[i], ...data };
       toast('Updated (Demo mode)'); closeModal(); renderTable(); return;
@@ -1149,7 +1190,12 @@
       await updateDoc(doc(window._db, window._col, _editId), data);
       toast('Enquiry updated!'); closeModal();
     } catch(err) {
-      toast('Error updating.', 'error');
+      console.error('Update error:', err.code, err.message);
+      if (err.code === 'permission-denied') {
+        toast('Permission denied — check Firestore security rules.', 'error');
+      } else {
+        toast('Update failed: ' + (err.message || err.code), 'error');
+      }
     }
   }
 

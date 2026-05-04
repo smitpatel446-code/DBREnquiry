@@ -11,18 +11,15 @@
   import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  /* ─── PASTE YOUR FIREBASE CONFIG HERE ─────────────────────────────────────
-     Go to: Firebase Console → Project Settings → Your Apps → Web App
-     Copy the firebaseConfig object and replace the one below.
-  ─────────────────────────────────────────────────────────────────────────── */
-const firebaseConfig = {
-  apiKey: "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
-  authDomain: "dbrenquiry-manager.firebaseapp.com",
-  projectId: "dbrenquiry-manager",
-  storageBucket: "dbrenquiry-manager.firebasestorage.app",
-  messagingSenderId: "644794117479",
-  appId: "1:644794117479:web:33b394211bc1c3c41413c2"
-};
+  /* ─── FIREBASE CONFIG ───────────────────────────────────────────────────── */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
+    authDomain: "dbrenquiry-manager.firebaseapp.com",
+    projectId: "dbrenquiry-manager",
+    storageBucket: "dbrenquiry-manager.firebasestorage.app",
+    messagingSenderId: "644794117479",
+    appId: "1:644794117479:web:33b394211bc1c3c41413c2"
+  };
 
   const app  = initializeApp(firebaseConfig);
   const db   = getFirestore(app);  // ← was missing, caused ALL Firebase ops to fail
@@ -646,10 +643,6 @@ const firebaseConfig = {
         <div class="section-divider" style="grid-column:1/-1;">Event Details</div>
 
         <div class="form-group">
-          <label>Function / Event Name</label>
-          <input type="text" id="f-event-name" placeholder="e.g. Birthday Celebration"/>
-        </div>
-        <div class="form-group">
           <label>Event Type</label>
           <select id="f-event-type">
             <option value="">— Select Event Type —</option>
@@ -698,7 +691,20 @@ const firebaseConfig = {
           <label>Booking Type</label>
           <select id="f-booking-type" onchange="toggleRoomFields()">
             <option value="Table Booking">🍽️ Table Booking</option>
+            <option value="Room Only">🛏️ Room Only</option>
             <option value="Table Booking + Room">🍽️🛏️ Table Booking + Room</option>
+          </select>
+        </div>
+
+        <!-- ── VENUE DROPDOWN (shown for Table Booking & Table Booking + Room) ── -->
+        <div class="form-group venue-field" id="f-venue-group" style="display:none;">
+          <label>Restaurant / Venue Selection</label>
+          <select id="f-venue">
+            <option value="">— Select Venue —</option>
+            <option value="Seabreeze">🌊 Seabreeze</option>
+            <option value="Hola Amigos">🌮 Hola Amigos</option>
+            <option value="Alfresco">🌿 Alfresco</option>
+            <option value="NI8owl">🦉 NI8owl</option>
           </select>
         </div>
 
@@ -1025,10 +1031,10 @@ const firebaseConfig = {
     const eventDate    = $('f-event-date').value;
     const remark       = ($('f-remark') && $('f-remark').value) ? $('f-remark').value.trim() : '';
     const status       = $('f-status').value;
-    const eventName    = $('f-event-name').value.trim();
     const eventType    = $('f-event-type').value;
     const enquirySrc   = $('f-enquiry-source').value;
     const bookingType  = $('f-booking-type').value;
+    const venue        = $('f-venue').value;
     const checkin      = $('f-checkin').value;
     const checkout     = $('f-checkout').value;
     const nights       = $('f-nights').value;
@@ -1040,8 +1046,9 @@ const firebaseConfig = {
 
     const record = {
       date, name, company, contact, eventDate, remark, status,
-      eventName, eventType, enquirySrc, bookingType,
-      ...(bookingType === 'Table Booking + Room' ? { checkin, checkout, nights, rooms } : {})
+      eventType, enquirySrc, bookingType, venue,
+      ...((bookingType === 'Room Only' || bookingType === 'Table Booking + Room')
+        ? { checkin, checkout, nights, rooms } : {})
     };
 
     if (window._demoMode || !window._fns) {
@@ -1064,7 +1071,7 @@ const firebaseConfig = {
   }
 
   function clearForm() {
-    ['f-name','f-company','f-contact','f-event-date','f-event-name',
+    ['f-name','f-company','f-contact','f-event-date',
      'f-checkin','f-checkout','f-nights','f-rooms'].forEach(id => { if($(id)) $(id).value=''; });
     if($('f-remark')) $('f-remark').value = '';
     $('f-date').value = todayStr();
@@ -1072,6 +1079,7 @@ const firebaseConfig = {
     $('f-event-type').value = '';
     $('f-enquiry-source').value = '';
     $('f-booking-type').value = 'Table Booking';
+    $('f-venue').value = '';
     toggleRoomFields();
     toggleRemarksField();
   }
@@ -1208,10 +1216,15 @@ const firebaseConfig = {
 
   /* ── CONDITIONAL SHOW/HIDE LOGIC ── */
   function toggleRoomFields() {
-    const isRoom = $('f-booking-type').value === 'Table Booking + Room';
+    const bt = $('f-booking-type').value;
+    // Room fields: visible for "Room Only" OR "Table Booking + Room"
+    const showRoom  = (bt === 'Room Only' || bt === 'Table Booking + Room');
+    // Venue field: visible for "Table Booking" OR "Table Booking + Room"
+    const showVenue = (bt === 'Table Booking' || bt === 'Table Booking + Room');
     document.querySelectorAll('.room-field').forEach(el => {
-      el.style.display = isRoom ? 'flex' : 'none';
+      el.style.display = showRoom ? 'flex' : 'none';
     });
+    $('f-venue-group').style.display = showVenue ? 'flex' : 'none';
   }
 
   function toggleRemarksField() {

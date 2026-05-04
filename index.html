@@ -1,1946 +1,1242 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Devka Beach Resort – Sales Dashboard</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
-    rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    :root {
-      --navy: #0B1E3D;
-      --navy-mid: #132847;
-      --navy-light: #1A3560;
-      --teal: #1A7FA8;
-      --teal-light: #2AA8D4;
-      --gold: #C8983A;
-      --gold-light: #E8B84B;
-      --gold-pale: #F5E8C8;
-      --sand: #F0E9D8;
-      --cream: #FAF7F2;
-      --white: #FFFFFF;
-      --text-primary: #0B1E3D;
-      --text-muted: #5A7090;
-      --text-light: #8BA0B8;
-      --border: #D8E4EE;
-      --success: #1A8C5E;
-      --danger: #C0392B;
-      --success-bg: #E8F7F1;
-      --danger-bg: #FDEAEA;
-      --shadow-sm: 0 2px 8px rgba(11, 30, 61, 0.08);
-      --shadow-md: 0 6px 24px rgba(11, 30, 61, 0.12);
-      --shadow-lg: 0 16px 48px rgba(11, 30, 61, 0.18);
-      --radius: 12px;
-      --radius-sm: 8px;
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--text-primary);
-      min-height: 100vh;
-      display: flex;
-    }
-
-    /* ─── SIDEBAR ─────────────────────────────────────────── */
-    .sidebar {
-      width: 260px;
-      min-height: 100vh;
-      background: var(--navy);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 100;
-      box-shadow: var(--shadow-lg);
-    }
-
-    .sidebar-brand {
-      padding: 28px 24px 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
-    .brand-wave {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--teal), var(--gold));
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 12px;
-    }
-
-    .brand-wave svg {
-      width: 20px;
-      height: 20px;
-      fill: white;
-    }
-
-    .brand-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--white);
-      line-height: 1.2;
-    }
-
-    .brand-sub {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-top: 2px;
-    }
-
-    .sidebar-nav {
-      padding: 20px 0;
-      flex: 1;
-    }
-
-    .nav-section-label {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.3);
-      padding: 12px 24px 6px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 24px;
-      font-size: 13.5px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.6);
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: all 0.2s;
-    }
-
-    .nav-item:hover {
-      color: white;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .nav-item.active {
-      color: var(--gold-light);
-      border-left-color: var(--gold);
-      background: rgba(200, 152, 58, 0.08);
-    }
-
-    .nav-icon {
-      width: 18px;
-      height: 18px;
-      opacity: 0.8;
-    }
-
-    .sidebar-footer {
-      padding: 20px 24px;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.25);
-      letter-spacing: 0.5px;
-    }
-
-    /* ─── MAIN CONTENT ────────────────────────────────────── */
-    .main {
-      margin-left: 260px;
-      flex: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .topbar {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 0 36px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .topbar-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .topbar-meta {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .topbar-date {
-      font-size: 12.5px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--teal), var(--navy-light));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: white;
-      letter-spacing: 0.5px;
-    }
-
-    .content {
-      padding: 32px 36px;
-      flex: 1;
-    }
-
-    /* ─── SECTIONS (TAB PANELS) ────────────────────────────── */
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    /* ─── KPI CARDS ────────────────────────────────────────── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 18px;
-      margin-bottom: 28px;
-    }
-
-    .kpi-card {
-      background: white;
-      border-radius: var(--radius);
-      padding: 22px 24px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .kpi-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-    }
-
-    .kpi-card.gold::before {
-      background: linear-gradient(90deg, var(--gold), var(--gold-light));
-    }
-
-    .kpi-card.teal::before {
-      background: linear-gradient(90deg, var(--teal), var(--teal-light));
-    }
-
-    .kpi-card.navy::before {
-      background: linear-gradient(90deg, var(--navy-light), var(--teal));
-    }
-
-    .kpi-card.green::before {
-      background: linear-gradient(90deg, #1A8C5E, #27ae60);
-    }
-
-    .kpi-label {
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      color: var(--text-light);
-      margin-bottom: 10px;
-    }
-
-    .kpi-value {
-      font-family: 'Playfair Display', serif;
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--navy);
-      line-height: 1;
-    }
-
-    .kpi-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
-
-    /* ─── SECTION HEADER ───────────────────────────────────── */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .section-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* ─── CARD ──────────────────────────────────────────────── */
-    .card {
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 20px 24px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--navy);
-    }
-
-    .card-body {
-      padding: 24px;
-    }
-
-    /* ─── FORM ──────────────────────────────────────────────── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group.full {
-      grid-column: 1 / -1;
-    }
-
-    .form-label {
-      font-size: 11.5px;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .form-control {
-      padding: 10px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      color: var(--text-primary);
-      background: var(--cream);
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .form-control:focus {
-      border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(26, 127, 168, 0.1);
-      background: white;
-    }
-
-    select.form-control {
-      cursor: pointer;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-
-    /* ─── BUTTONS ───────────────────────────────────────────── */
-    .btn {
-      padding: 10px 22px;
-      border-radius: var(--radius-sm);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13.5px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      letter-spacing: 0.3px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--teal), var(--navy-light));
-      color: white;
-      box-shadow: 0 4px 14px rgba(26, 127, 168, 0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(26, 127, 168, 0.4);
-    }
-
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold), var(--gold-light));
-      color: white;
-      box-shadow: 0 4px 14px rgba(200, 152, 58, 0.3);
-    }
-
-    .btn-gold:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(200, 152, 58, 0.4);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1.5px solid var(--border);
-      color: var(--text-muted);
-    }
-
-    .btn-outline:hover {
-      border-color: var(--teal);
-      color: var(--teal);
-      background: rgba(26, 127, 168, 0.04);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-      padding: 6px 12px;
-      font-size: 12px;
-    }
-
-    .btn-sm {
-      padding: 6px 14px;
-      font-size: 12px;
-    }
-
-    /* ─── TABLE ─────────────────────────────────────────────── */
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13.5px;
-    }
-
-    .data-table thead tr {
-      background: var(--navy);
-      color: white;
-    }
-
-    .data-table thead th {
-      padding: 13px 16px;
-      text-align: left;
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .data-table thead th:hover {
-      background: var(--navy-light);
-    }
-
-    .data-table tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-
-    .data-table tbody tr:hover {
-      background: rgba(26, 127, 168, 0.04);
-    }
-
-    .data-table tbody td {
-      padding: 12px 16px;
-      color: var(--text-primary);
-      white-space: nowrap;
-    }
-
-    /* ─── SEARCH / FILTER BAR ───────────────────────────────── */
-    .table-toolbar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .search-input {
-      flex: 1;
-      min-width: 200px;
-      padding: 9px 14px 9px 38px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13.5px;
-      color: var(--text-primary);
-      background: white;
-      outline: none;
-      position: relative;
-    }
-
-    .search-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .search-wrap svg {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 15px;
-      height: 15px;
-      color: var(--text-light);
-      pointer-events: none;
-    }
-
-    .search-input:focus {
-      border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(26, 127, 168, 0.1);
-    }
-
-    /* ─── CHARTS GRID ───────────────────────────────────────── */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .charts-grid.tri {
-      grid-template-columns: 2fr 1fr;
-    }
-
-    .chart-card {
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-      padding: 22px;
-    }
-
-    .chart-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--navy);
-      margin-bottom: 16px;
-    }
-
-    .chart-container {
-      position: relative;
-    }
-
-    /* ─── BADGES ────────────────────────────────────────────── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11.5px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
-
-    .badge-active {
-      background: var(--success-bg);
-      color: var(--success);
-    }
-
-    .badge-inactive {
-      background: var(--danger-bg);
-      color: var(--danger);
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-
-    .badge-active .badge-dot {
-      background: var(--success);
-    }
-
-    .badge-inactive .badge-dot {
-      background: var(--danger);
-    }
-
-    /* ─── MTD / YTD SECTION ─────────────────────────────────── */
-    .metrics-group {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
-
-    .metric-block {
-      flex: 1;
-      min-width: 140px;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .metric-block .period-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: var(--navy);
-      color: var(--gold-light);
-      margin-bottom: 10px;
-    }
-
-    .metric-block.ytd .period-badge {
-      background: linear-gradient(135deg, var(--teal), var(--navy-light));
-    }
-
-    .metric-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--navy);
-      line-height: 1.1;
-    }
-
-    .metric-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 4px;
-      font-weight: 500;
-    }
-
-    .metrics-container {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 24px;
-    }
-
-    .metrics-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .metrics-divider {
-      width: 1px;
-      background: var(--border);
-    }
-
-    /* ─── EMPTY STATE ───────────────────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--text-light);
-    }
-
-    .empty-state svg {
-      width: 48px;
-      height: 48px;
-      margin-bottom: 12px;
-      opacity: 0.3;
-    }
-
-    .empty-state p {
-      font-size: 14px;
-    }
-
-    /* ─── TOAST ─────────────────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      background: var(--navy);
-      color: white;
-      padding: 14px 22px;
-      border-radius: var(--radius-sm);
-      font-size: 13.5px;
-      font-weight: 500;
-      box-shadow: var(--shadow-lg);
-      z-index: 9999;
-      display: none;
-      border-left: 4px solid var(--gold);
-      animation: slideUp 0.3s ease;
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    /* ─── SCROLL ────────────────────────────────────────────── */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-light);
-    }
-
-    /* ─── RESPONSIVE ────────────────────────────────────────── */
-    @media (max-width: 900px) {
-      .sidebar {
-        width: 220px;
-      }
-
-      .main {
-        margin-left: 220px;
-      }
-
-      .charts-grid,
-      .charts-grid.tri {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .sidebar {
-        display: none;
-      }
-
-      .main {
-        margin-left: 0;
-      }
-
-      .content {
-        padding: 20px 16px;
-      }
-
-      .kpi-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .metrics-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .decorative-line {
-      height: 2px;
-      background: linear-gradient(90deg, var(--gold), var(--teal), transparent);
-      border-radius: 2px;
-      margin-bottom: 28px;
-      opacity: 0.5;
-    }
-
-    .amount-cell {
-      font-family: 'Playfair Display', serif;
-      font-weight: 600;
-      color: var(--navy);
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Devka Beach Resort — Enquiry Manager</title>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  /* ─── PASTE YOUR FIREBASE CONFIG HERE ─────────────────────────────────────
+     Go to: Firebase Console → Project Settings → Your Apps → Web App
+     Copy the firebaseConfig object and replace the one below.
+  ─────────────────────────────────────────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
+  authDomain: "dbrenquiry-manager.firebaseapp.com",
+  projectId: "dbrenquiry-manager",
+  storageBucket: "dbrenquiry-manager.firebasestorage.app",
+  messagingSenderId: "644794117479",
+  appId: "1:644794117479:web:33b394211bc1c3c41413c2"
+};
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);  // ← was missing, caused ALL Firebase ops to fail
+  const COL  = "enquiries";
+
+  // expose to window so vanilla JS can call
+  window._db = db;
+  window._col = COL;
+  window._fns = { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, orderBy, query, serverTimestamp, onSnapshot };
+
+  // Live listener — fires whenever data changes
+  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+  onSnapshot(q, snap => {
+    window._enquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (typeof window.renderTable === "function") window.renderTable();
+  }, err => {
+    console.error("Firestore error:", err);
+    // If config not set yet, show demo mode
+    if (err.code === "invalid-argument" || err.message.includes("projectId")) {
+      window._demoMode = true;
+      if (typeof window.renderTable === "function") window.renderTable();
+    }
+  });
+</script>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+  :root {
+    --sand:    #f4ede3;
+    --sand2:   #e8ddd0;
+    --ocean:   #1a4a5c;
+    --ocean2:  #0d3040;
+    --wave:    #2e7d8a;
+    --gold:    #c9954a;
+    --gold2:   #e8b96a;
+    --white:   #fdfaf7;
+    --text:    #2a2118;
+    --muted:   #7a6d62;
+    --border:  #d4c9bc;
+    --success: #2e7d5a;
+    --danger:  #c0392b;
+    --shadow:  0 4px 24px rgba(26,74,92,0.10);
+    --r: 10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--ocean2) 0%, var(--ocean) 60%, var(--wave) 100%);
+    color: var(--white);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='rgba(255,255,255,0.04)' d='M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120Z'/%3E%3C/svg%3E") bottom/100% no-repeat;
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 32px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .header-logo {
+    width: 56px; height: 56px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(201,149,74,0.3);
+  }
+  .header-text h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+  }
+  .header-text p {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.65);
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 0.05em;
+  }
+  #live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: #4ddb8a;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--r);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--gold);
+    transition: transform .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--ocean);
+    line-height: 1;
+  }
+  .stat-card .lbl {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── DEMO NOTICE ── */
+  #demo-notice {
+    background: linear-gradient(135deg, #fff8e6, #ffe9b0);
+    border: 1.5px solid var(--gold);
+    border-radius: var(--r);
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    display: none;
+    font-size: 0.88rem;
+    color: #7a5500;
+    line-height: 1.6;
+  }
+  #demo-notice strong { color: #5a3e00; }
+  #demo-notice code {
+    background: rgba(0,0,0,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.83rem;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--ocean);
+    flex: 1;
+  }
+  .card-body { padding: 28px; }
+
+  /* ── FORM GRID ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  label span.req { color: var(--danger); margin-left: 2px; }
+  input, textarea, select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.93rem;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--white);
+    color: var(--text);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--wave);
+    box-shadow: 0 0 0 3px rgba(46,125,138,0.12);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.87rem;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all .18s;
+    display: inline-flex; align-items: center; gap: 7px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--ocean) 0%, var(--wave) 100%);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(26,74,92,0.25);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(26,74,92,0.35); }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(201,149,74,0.3);
+  }
+  .btn-gold:hover { transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-outline:hover { border-color: var(--wave); color: var(--wave); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(244,237,227,0.5);
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding-left: 36px;
+    font-size: 0.88rem;
+  }
+  .search-icon {
+    position: absolute;
+    left: 11px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .filter-select {
+    font-size: 0.85rem;
+    padding: 9px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    padding: 0 0 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+  }
+  thead tr {
+    background: linear-gradient(135deg, var(--ocean2), var(--ocean));
+    color: rgba(255,255,255,0.9);
+  }
+  th {
+    padding: 13px 16px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { background: rgba(255,255,255,0.1); }
+  th .sort-icon { margin-left: 4px; opacity: 0.5; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  tbody tr:hover { background: rgba(46,125,138,0.05); }
+  tbody tr:last-child { border-bottom: none; }
+  td {
+    padding: 13px 16px;
+    vertical-align: middle;
+    max-width: 200px;
+  }
+  td .cell-main { font-weight: 500; color: var(--text); }
+  td .cell-sub  { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+  td.actions { white-space: nowrap; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .badge-new    { background: #e8f4fd; color: #1565c0; }
+  .badge-done   { background: #e8f5e9; color: var(--success); }
+  .badge-follow { background: #fff8e1; color: #e65100; }
+  .badge-muted  { background: #f0f0f0; color: #555; }
+  .badge-gold   { background: #fff4e0; color: var(--gold); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(13,48,64,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(13,48,64,0.4);
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 24px 28px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 18px;
+    position: sticky; top: 0;
+    background: var(--white);
+    z-index: 1;
+  }
+  .modal-header h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    color: var(--ocean);
+    flex: 1;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    background: var(--sand);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: background .15s;
+  }
+  .modal-close:hover { background: var(--sand2); }
+  .modal-body { padding: 24px 28px 28px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 32px; right: 32px;
+    background: var(--ocean);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .3s ease;
+    z-index: 9999;
+    display: flex; align-items: center; gap: 10px;
+    max-width: 340px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--success); }
+  #toast.error   { background: var(--danger); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 28px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+  footer strong { color: var(--ocean); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .header-inner { padding: 20px 20px 24px; gap: 16px; }
+    .header-text h1 { font-size: 1.5rem; }
+    .header-badge { display: none; }
+    .main { padding: 20px 14px 50px; }
+    .card-body { padding: 20px 16px; }
+    .toolbar { padding: 12px 16px; }
+    th, td { padding: 10px 12px; }
+  }
+
+  .remark-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── NEW CONDITIONAL SECTIONS ── */
+  .section-divider {
+    grid-column: 1 / -1;
+    margin: 8px 0 2px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: var(--ocean);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .room-fields { display: none; }
+  .room-fields.visible { display: contents; }
+  .remarks-field { display: none; }
+  .remarks-field.visible { display: flex; }
+  input[readonly] {
+    background: var(--sand);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .number-badge {
+    width: 28px; height: 28px;
+    background: var(--ocean);
+    color: #fff;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    color: var(--ocean);
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+</style>
 </head>
-
 <body>
 
-  <!-- ─── SIDEBAR ─────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-wave">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M3 18c1.5-2 3-3 4.5-3s3 1 4.5 1 3-1 4.5-1 3 1 4.5 3M3 13c1.5-2 3-3 4.5-3s3 1 4.5 1 3-1 4.5-1 3 1 4.5 3M12 2l2 4H10l2-4z" />
-        </svg>
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-logo">🏖️</div>
+    <div class="header-text">
+      <h1>Devka Beach Resort</h1>
+      <p>Enquiry Management System</p>
+    </div>
+    <div class="header-badge">
+      <span id="live-dot"></span> Live Database
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="num" id="stat-total">0</div>
+      <div class="lbl">Total Enquiries</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--wave);">
+      <div class="num" id="stat-today">0</div>
+      <div class="lbl">Today</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--gold);">
+      <div class="num" id="stat-month">0</div>
+      <div class="lbl">This Month</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--success);">
+      <div class="num" id="stat-upcoming">0</div>
+      <div class="lbl">Upcoming Events</div>
+    </div>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="number-badge">+</div>
+      <h2>New Enquiry Entry</h2>
+    </div>
+    <div class="card-body">
+      <div id="form-section-label" class="section-label">Guest &amp; Contact Details</div>
+      <div class="form-grid">
+
+        <!-- ── DATE FIELDS ── -->
+        <div class="form-group">
+          <label>① Date of Enquiry <span class="req">*</span></label>
+          <input type="date" id="f-date" readonly/>
+        </div>
+        <div class="form-group">
+          <label>② Date of Function / Event <span class="req">*</span></label>
+          <input type="date" id="f-event-date"/>
+        </div>
+
+        <!-- ── GUEST DETAILS ── -->
+        <div class="form-group">
+          <label>③ Guest / Person Name <span class="req">*</span></label>
+          <input type="text" id="f-name" placeholder="e.g. Rahul Sharma"/>
+        </div>
+        <div class="form-group">
+          <label>④ Contact Number <span class="req">*</span></label>
+          <input type="tel" id="f-contact" placeholder="+91 98765 43210"/>
+        </div>
+        <div class="form-group">
+          <label>⑤ Company Name</label>
+          <input type="text" id="f-company" placeholder="Company or Organisation (optional)"/>
+        </div>
+
+        <!-- ── EVENT DETAILS ── -->
+        <div class="section-divider" style="grid-column:1/-1;">Event Details</div>
+
+        <div class="form-group">
+          <label>Function / Event Name</label>
+          <input type="text" id="f-event-name" placeholder="e.g. Birthday Celebration"/>
+        </div>
+        <div class="form-group">
+          <label>Event Type</label>
+          <select id="f-event-type">
+            <option value="">— Select Event Type —</option>
+            <option value="Birthday">🎂 Birthday</option>
+            <option value="Anniversary">💍 Anniversary</option>
+            <option value="Wedding">💒 Wedding</option>
+            <option value="Corporate">🏢 Corporate Event</option>
+            <option value="Get-Together">🎉 Get-Together</option>
+            <option value="Conference">📋 Conference / Seminar</option>
+            <option value="Kitty Party">🌸 Kitty Party</option>
+            <option value="Baby Shower">🍼 Baby Shower</option>
+            <option value="Other">📌 Other</option>
+          </select>
+        </div>
+
+        <!-- ── STATUS & SOURCE ── -->
+        <div class="section-divider" style="grid-column:1/-1;">Booking &amp; Status</div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status" onchange="toggleRemarksField()">
+            <option value="Active">🟢 Active</option>
+            <option value="Inactive">⚫ Inactive</option>
+            <option value="Prospecting">🔵 Prospecting</option>
+            <option value="Negotiations">🟠 Negotiations</option>
+            <option value="Completed">✅ Completed</option>
+            <option value="Conversion">🌟 Conversion</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Enquiry Source</label>
+          <select id="f-enquiry-source">
+            <option value="">— Select Source —</option>
+            <option value="Walk-in">🚶 Walk-in</option>
+            <option value="Family & Friend Referral">👨‍👩‍👧 Family &amp; Friend Referral</option>
+            <option value="Pamphlet / Flyer">📄 Pamphlet / Flyer</option>
+            <option value="Website">🌐 Website</option>
+            <option value="Instagram">📸 Instagram</option>
+            <option value="Facebook">👍 Facebook</option>
+            <option value="Google">🔍 Google</option>
+            <option value="OTA">🏨 OTA</option>
+            <option value="Other">📌 Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Booking Type</label>
+          <select id="f-booking-type" onchange="toggleRoomFields()">
+            <option value="Table Booking">🍽️ Table Booking</option>
+            <option value="Table Booking + Room">🍽️🛏️ Table Booking + Room</option>
+          </select>
+        </div>
+
+        <!-- ── ROOM FIELDS (conditional) ── -->
+        <div class="room-fields" id="room-fields-wrapper" style="display:contents;">
+          <div class="form-group room-field" style="display:none;">
+            <label>Check-in Date &amp; Time</label>
+            <input type="datetime-local" id="f-checkin"/>
+          </div>
+          <div class="form-group room-field" style="display:none;">
+            <label>Check-out Date &amp; Time</label>
+            <input type="datetime-local" id="f-checkout" onchange="calcNights()"/>
+          </div>
+          <div class="form-group room-field" style="display:none;">
+            <label>Number of Nights</label>
+            <input type="number" id="f-nights" min="1" placeholder="Auto-calculated" readonly/>
+          </div>
+          <div class="form-group room-field" style="display:none;">
+            <label>Number of Rooms</label>
+            <input type="number" id="f-rooms" min="1" placeholder="e.g. 2"/>
+          </div>
+        </div>
+
+        <!-- ── REMARKS (shown when Status = Active) ── -->
+        <div class="form-group full remarks-field" id="f-remarks-group" style="display:none;">
+          <label>⑥ Remarks / Customer Requirements</label>
+          <textarea id="f-remark" placeholder="Write any special requirements, event type, guest count, preferences, etc..."></textarea>
+        </div>
+
       </div>
-      <div class="brand-name">Devka Beach Resort</div>
-      <div class="brand-sub">Sales Command</div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="submitForm()">✓ &nbsp;Save Enquiry</button>
+        <button class="btn btn-outline" onclick="clearForm()">✕ &nbsp;Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECORDS CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="number-badge">≡</div>
+      <h2>Enquiry Records</h2>
+      <button class="btn btn-gold btn-sm" onclick="exportExcel()" style="margin-left:auto">
+        ↓ &nbsp;Export Excel
+      </button>
     </div>
 
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">Overview</div>
-      <div class="nav-item active" onclick="switchTab('dashboard')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7" />
-          <rect x="14" y="3" width="7" height="7" />
-          <rect x="14" y="14" width="7" height="7" />
-          <rect x="3" y="14" width="7" height="7" />
-        </svg>
-        Dashboard
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search by name, company, contact…" oninput="renderTable()"/>
       </div>
-      <div class="nav-item" onclick="switchTab('analytics')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-        Analytics
-      </div>
-
-      <div class="nav-section-label">Sales</div>
-      <div class="nav-item" onclick="switchTab('entry')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
-        New Entry
-      </div>
-      <div class="nav-item" onclick="switchTab('records')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10 9 9 9 8 9" />
-        </svg>
-        Sales Records
-      </div>
-
-      <div class="nav-section-label">Enquiries</div>
-      <div class="nav-item" onclick="switchTab('enquiry')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-        </svg>
-        Enquiry Manager
-      </div>
-    </nav>
-
-    <div class="sidebar-footer">
-      v2.0 &bull; 2025 Devka Beach Resort
+      <select class="filter-select" id="filter-status" onchange="renderTable()">
+        <option value="">All Status</option>
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="Prospecting">Prospecting</option>
+        <option value="Negotiations">Negotiations</option>
+        <option value="Completed">Completed</option>
+        <option value="Conversion">Conversion</option>
+      </select>
+      <select class="filter-select" id="filter-month" onchange="renderTable()">
+        <option value="">All Months</option>
+      </select>
     </div>
-  </aside>
 
-  <!-- ─── MAIN ─────────────────────────────────── -->
-  <div class="main">
-    <header class="topbar">
-      <div class="topbar-title" id="topbar-title">Sales Dashboard</div>
-      <div class="topbar-meta">
-        <span class="topbar-date" id="topbar-date"></span>
-        <div class="avatar">DB</div>
-      </div>
-    </header>
+    <!-- Table -->
+    <div class="table-wrap">
+      <table id="enquiry-table">
+        <thead>
+          <tr>
+            <th onclick="sortBy('createdAt')">#</th>
+            <th onclick="sortBy('date')">Date <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('name')">Guest Name <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('company')">Company <span class="sort-icon">↕</span></th>
+            <th>Contact</th>
+            <th onclick="sortBy('eventDate')">Event Date <span class="sort-icon">↕</span></th>
+            <th>Status</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="9"><div class="empty-state"><div class="icon">🌊</div><p>Loading enquiries…</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-    <div class="content">
+</div><!-- /main -->
 
-      <!-- ═══ DASHBOARD ═══ -->
-      <div class="section active" id="sec-dashboard">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Overview</div>
-            <div class="section-desc">Real-time performance summary for Devka Beach Resort</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <label style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;">Month:</label>
-              <select class="form-control" id="dash-filter-month" onchange="updateDashboard()"
-                style="width:140px;padding:7px 12px;font-size:13px;">
-                <option value="">All Months</option>
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-            </div>
-            <button class="btn btn-gold btn-sm" onclick="exportToExcel()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Export Excel
-            </button>
-          </div>
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Enquiry</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date of Enquiry</label>
+          <input type="date" id="e-date"/>
         </div>
-        <div class="decorative-line"></div>
-
-        <div class="kpi-grid" id="kpi-grid">
-          <div class="kpi-card gold">
-            <div class="kpi-label">MTD Revenue</div>
-            <div class="kpi-value" id="kpi-mtd-rev">Rs. 0</div>
-            <div class="kpi-sub">Current month</div>
-          </div>
-          <div class="kpi-card teal">
-            <div class="kpi-label">YTD Revenue</div>
-            <div class="kpi-value" id="kpi-ytd-rev">Rs. 0</div>
-            <div class="kpi-sub">Year to date</div>
-          </div>
-          <div class="kpi-card navy">
-            <div class="kpi-label">MTD Rooms</div>
-            <div class="kpi-value" id="kpi-mtd-rooms">0</div>
-            <div class="kpi-sub">Rooms booked this month</div>
-          </div>
-          <div class="kpi-card green">
-            <div class="kpi-label">Total Entries</div>
-            <div class="kpi-value" id="kpi-total-entries">0</div>
-            <div class="kpi-sub">All time records</div>
-          </div>
+        <div class="form-group">
+          <label>Guest / Person Name</label>
+          <input type="text" id="e-name"/>
         </div>
-
-        <!-- MTD / YTD detail -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
-          <div class="metrics-container">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-              <span
-                style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--navy);color:var(--gold-light);padding:4px 10px;border-radius:4px;">MTD</span>
-              <span style="font-size:13px;font-weight:600;color:var(--navy);">Month-To-Date</span>
-            </div>
-            <div class="metrics-row">
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="mtd-rev-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Total Revenue</div>
-              </div>
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="mtd-rooms-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Rooms</div>
-              </div>
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="mtd-nights-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Nights</div>
-              </div>
-            </div>
-          </div>
-          <div class="metrics-container">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-              <span
-                style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(135deg,var(--teal),var(--navy-light));color:white;padding:4px 10px;border-radius:4px;">YTD</span>
-              <span style="font-size:13px;font-weight:600;color:var(--navy);">Year-To-Date</span>
-            </div>
-            <div class="metrics-row">
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="ytd-rev-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Total Revenue</div>
-              </div>
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="ytd-rooms-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Rooms</div>
-              </div>
-              <div>
-                <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);"
-                  id="ytd-nights-detail">0</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Nights</div>
-              </div>
-            </div>
-          </div>
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" id="e-company"/>
         </div>
-
-        <!-- Charts -->
-        <div class="charts-grid tri">
-          <div class="chart-card">
-            <div class="chart-title">Daily Sales Trend</div>
-            <div class="chart-container" style="height:240px;"><canvas id="lineChart"></canvas></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Enquiry Status</div>
-            <div class="chart-container" style="height:240px;"><canvas id="enqPieChart"></canvas></div>
-          </div>
+        <div class="form-group">
+          <label>Contact Number</label>
+          <input type="tel" id="e-contact"/>
         </div>
-
-        <div class="chart-card" style="margin-bottom:24px;">
-          <div class="chart-title">Monthly Revenue Overview</div>
-          <div class="chart-container" style="height:240px;"><canvas id="barChart"></canvas></div>
+        <div class="form-group">
+          <label>Date of Function / Event</label>
+          <input type="date" id="e-event-date"/>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="e-status">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Prospecting">Prospecting</option>
+            <option value="Negotiations">Negotiations</option>
+            <option value="Completed">Completed</option>
+            <option value="Conversion">Conversion</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Remarks / Requirements</label>
+          <textarea id="e-remark" style="min-height:100px"></textarea>
         </div>
       </div>
-
-      <!-- ═══ ANALYTICS ═══ -->
-      <div class="section" id="sec-analytics">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Analytics</div>
-            <div class="section-desc">In-depth charts and performance breakdowns</div>
-          </div>
-        </div>
-        <div class="decorative-line"></div>
-
-        <div class="charts-grid" style="margin-bottom:24px;">
-          <div class="chart-card">
-            <div class="chart-title">Daily Sales Trend (Full)</div>
-            <div class="chart-container" style="height:260px;"><canvas id="lineChart2"></canvas></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Monthly Revenue Bar</div>
-            <div class="chart-container" style="height:260px;"><canvas id="barChart2"></canvas></div>
-          </div>
-        </div>
-
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">Room Occupancy by Month</div>
-            <div class="chart-container" style="height:260px;"><canvas id="occupancyChart"></canvas></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Enquiry Active vs Inactive</div>
-            <div class="chart-container" style="height:260px;"><canvas id="enqBarChart"></canvas></div>
-          </div>
-        </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveEdit()">✓ &nbsp;Update Enquiry</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
       </div>
+    </div>
+  </div>
+</div>
 
-      <!-- ═══ NEW ENTRY ═══ -->
-      <div class="section" id="sec-entry">
-        <div class="section-header">
-          <div>
-            <div class="section-title">New Sales Entry</div>
-            <div class="section-desc">Record daily booking and revenue data</div>
-          </div>
-        </div>
-        <div class="decorative-line"></div>
+<!-- TOAST -->
+<div id="toast"></div>
 
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Daily Sales Form</span>
-            <span style="font-size:12px;color:var(--text-muted);">All fields marked * are required</span>
-          </div>
-          <div class="card-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Date *</label>
-                <input type="date" id="f-date" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Particular (Guest / Booking Type) *</label>
-                <input type="text" id="f-particular" class="form-control" placeholder="e.g. John Doe – Honeymoon" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Number of Rooms *</label>
-                <input type="number" id="f-rooms" class="form-control" placeholder="0" min="0" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Number of Nights *</label>
-                <input type="number" id="f-nights" class="form-control" placeholder="0" min="0" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Extra Charges (Rs.)</label>
-                <input type="number" id="f-extra" class="form-control" placeholder="0.00" min="0" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Banquet</label>
-                <select id="f-banquet" class="form-control">
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-              <div class="form-group" id="banquet-amount-group" style="display:none;">
-                <label class="form-label">Banquet Amount (Rs.)</label>
-                <input type="number" id="f-banquet-amount" class="form-control" placeholder="0.00" min="0" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Contact Number</label>
-                <input type="tel" id="f-contact" class="form-control" placeholder="+91 00000 00000" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Total Amount (Rs.) *</label>
-                <input type="number" id="f-total" class="form-control" placeholder="0.00" min="0" />
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-primary" onclick="saveSalesEntry()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                Save Entry
-              </button>
-              <button class="btn btn-outline" onclick="clearSalesForm()">Clear Form</button>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- FOOTER -->
+<footer>
+  <strong>Devka Beach Resort</strong> &nbsp;·&nbsp; Enquiry Management System &nbsp;·&nbsp; Powered by Firebase
+</footer>
 
-      <!-- ═══ SALES RECORDS ═══ -->
-      <div class="section" id="sec-records">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Sales Records</div>
-            <div class="section-desc">All bookings and revenue entries</div>
-          </div>
-          <button class="btn btn-gold btn-sm" onclick="exportToExcel()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Export to Excel
-          </button>
-        </div>
-        <div class="decorative-line"></div>
+<script>
+  /* ─────────────────────────────────────────────
+     DATA LAYER — Demo fallback & state
+  ───────────────────────────────────────────── */
+  window._enquiries = window._enquiries || [];
+  window._demoMode  = window._demoMode  || false;
+  let _demoData = [];
+  let _demoCounter = 1;
+  let _sortKey = 'createdAt';
+  let _sortAsc = false;
+  let _editId  = null;
 
-        <div class="card">
-          <div class="card-body" style="padding-bottom:0;">
-            <div class="table-toolbar">
-              <div class="search-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input class="search-input" type="text" id="sales-search" placeholder="Search by name, date..."
-                  oninput="renderSalesTable()" />
-              </div>
-              <select class="form-control" id="filter-month" onchange="renderSalesTable()" style="width:140px;">
-                <option value="">All Months</option>
-                <option value="01">January</option>
-                <option value="02">February</option>
-                <option value="03">March</option>
-                <option value="04">April</option>
-                <option value="05">May</option>
-                <option value="06">June</option>
-                <option value="07">July</option>
-                <option value="08">August</option>
-                <option value="09">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-              <select class="form-control" id="filter-year" onchange="renderSalesTable()" style="width:110px;">
-                <option value="">All Years</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th onclick="sortTable('date')"># / Date</th>
-                  <th onclick="sortTable('particular')">Particular</th>
-                  <th onclick="sortTable('rooms')">Rooms</th>
-                  <th onclick="sortTable('nights')">Nights</th>
-                  <th onclick="sortTable('extra')">Extra Chg.</th>
-                  <th onclick="sortTable('banquet')">Banquet</th>
-                  <th onclick="sortTable('contact')">Contact</th>
-                  <th onclick="sortTable('total')">Total (Rs.)</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="sales-table-body"></tbody>
-            </table>
-            <div id="sales-empty" class="empty-state" style="display:none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              <p>No sales records found. Add your first entry.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+  /* ─────────────────────────────────────────────
+     UTILITIES
+  ───────────────────────────────────────────── */
+  const $  = id => document.getElementById(id);
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  const todayStr = () => new Date().toISOString().split('T')[0];
+  const monthStr = d => d ? d.slice(0,7) : '';
 
-      <!-- ═══ ENQUIRY ═══ -->
-      <div class="section" id="sec-enquiry">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Enquiry Manager</div>
-            <div class="section-desc">Track and manage all resort enquiries</div>
-          </div>
-        </div>
-        <div class="decorative-line"></div>
+  function toast(msg, type='success') {
+    const el = $('toast');
+    el.textContent = (type==='success'?'✓ ':'✕ ') + msg;
+    el.className   = 'show ' + type;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = ''; }, 3200);
+  }
 
-        <!-- Enquiry Counts -->
-        <div class="kpi-grid" style="margin-bottom:24px;">
-          <div class="kpi-card gold">
-            <div class="kpi-label">Total Enquiries</div>
-            <div class="kpi-value" id="enq-total">0</div>
-          </div>
-          <div class="kpi-card green">
-            <div class="kpi-label">Active</div>
-            <div class="kpi-value" id="enq-active">0</div>
-          </div>
-          <div class="kpi-card" style="--card-color:var(--danger);">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--danger);"></div>
-            <div class="kpi-label">Inactive</div>
-            <div class="kpi-value" id="enq-inactive">0</div>
-          </div>
-        </div>
+  function getList() {
+    return (window._demoMode || !window._fns)
+      ? _demoData
+      : (window._enquiries || []);
+  }
 
-        <!-- Enquiry Form -->
-        <div class="card" style="margin-bottom:24px;">
-          <div class="card-header"><span class="card-title">Add New Enquiry</span></div>
-          <div class="card-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Date *</label>
-                <input type="date" id="e-date" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Month</label>
-                <select id="e-month" class="form-control">
-                  <option value="">Select Month</option>
-                  <option>January</option>
-                  <option>February</option>
-                  <option>March</option>
-                  <option>April</option>
-                  <option>May</option>
-                  <option>June</option>
-                  <option>July</option>
-                  <option>August</option>
-                  <option>September</option>
-                  <option>October</option>
-                  <option>November</option>
-                  <option>December</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Date of Function *</label>
-                <input type="date" id="e-function-date" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Function (Event) Type</label>
-                <select id="e-function-type" class="form-control">
-                  <option value="">Select Type</option>
-                  <option value="Wedding">Wedding</option>
-                  <option value="Birthday Party">Birthday Party</option>
-                  <option value="Anniversary">Anniversary</option>
-                  <option value="Corporate Event">Corporate Event</option>
-                  <option value="Conference">Conference</option>
-                  <option value="Family Gathering">Family Gathering</option>
-                  <option value="Engagement">Engagement</option>
-                  <option value="Baby Shower">Baby Shower</option>
-                  <option value="Farewell">Farewell</option>
-                  <option value="Kitty Party">Kitty Party</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Guest / Enquiry Name *</label>
-                <input type="text" id="e-name" class="form-control" placeholder="Guest or Company Name" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Status *</label>
-                <select id="e-status" class="form-control">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Enquiry Source *</label>
-                <select id="e-source" class="form-control" required>
-                  <option value="">Select Source</option>
-                  <option value="Walk-in">Walk-in</option>
-                  <option value="Family & Friend Referral">Family &amp; Friend Referral</option>
-                  <option value="Pamphlet / Flyer">Pamphlet / Flyer</option>
-                  <option value="Website">Website</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Google">Google</option>
-                  <option value="OTA">OTA</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="form-group full">
-                <label class="form-label">Remark</label>
-                <input type="text" id="e-remark" class="form-control" placeholder="Any notes or follow-up actions..." />
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-primary" onclick="saveEnquiry()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                </svg>
-                Save Enquiry
-              </button>
-              <button class="btn btn-outline" onclick="clearEnquiryForm()">Clear</button>
-            </div>
-          </div>
-        </div>
+  /* ─────────────────────────────────────────────
+     STATS
+  ───────────────────────────────────────────── */
+  function updateStats() {
+    const list    = getList();
+    const today   = todayStr();
+    const curMo   = today.slice(0,7);
+    const now     = new Date();
 
-        <!-- Enquiry Table -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">All Enquiries</span>
-            <div style="display:flex;gap:10px;">
-              <div class="search-wrap" style="flex:none;width:220px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input class="search-input" type="text" id="enq-search" placeholder="Search enquiries..."
-                  oninput="renderEnquiryTable()" />
-              </div>
-              <select class="form-control" id="enq-filter-status" onchange="renderEnquiryTable()" style="width:130px;">
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Date</th>
-                  <th>Month</th>
-                  <th>Date of Function</th>
-                  <th>Function Type</th>
-                  <th>Name</th>
-                  <th>Remark</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="enquiry-table-body"></tbody>
-            </table>
-            <div id="enq-empty" class="empty-state" style="display:none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
-              <p>No enquiries yet. Add your first enquiry above.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    $('stat-total').textContent    = list.length;
+    $('stat-today').textContent    = list.filter(e => e.date === today).length;
+    $('stat-month').textContent    = list.filter(e => monthStr(e.date) === curMo).length;
+    $('stat-upcoming').textContent = list.filter(e => e.eventDate && new Date(e.eventDate) >= now).length;
+  }
 
-    </div><!-- /content -->
-  </div><!-- /main -->
+  /* ─────────────────────────────────────────────
+     MONTH FILTER OPTIONS
+  ───────────────────────────────────────────── */
+  function refreshMonthFilter() {
+    const list    = getList();
+    const months  = [...new Set(list.map(e => monthStr(e.date)).filter(Boolean))].sort().reverse();
+    const sel     = $('filter-month');
+    const cur     = sel.value;
+    sel.innerHTML = '<option value="">All Months</option>' +
+      months.map(m => {
+        const [y, mo] = m.split('-');
+        const label   = new Date(+y, +mo-1).toLocaleString('default',{month:'long',year:'numeric'});
+        return `<option value="${m}"${m===cur?' selected':''}>${label}</option>`;
+      }).join('');
+  }
 
-  <div class="toast" id="toast"></div>
+  /* ─────────────────────────────────────────────
+     SORT
+  ───────────────────────────────────────────── */
+  function sortBy(key) {
+    if (_sortKey === key) _sortAsc = !_sortAsc;
+    else { _sortKey = key; _sortAsc = true; }
+    renderTable();
+  }
 
-  <script>
-    // ─── STATE ────────────────────────────────────────────────────
-    let salesData = JSON.parse(localStorage.getItem('devka_sales') || '[]');
-    let enquiryData = JSON.parse(localStorage.getItem('devka_enquiries') || '[]');
-    let sortKey = 'date';
-    let sortAsc = false;
-    let lineChartInst, barChartInst, enqPieInst;
-    let lineChart2Inst, barChart2Inst, occupancyInst, enqBarInst;
+  /* ─────────────────────────────────────────────
+     RENDER TABLE
+  ───────────────────────────────────────────── */
+  window.renderTable = function() {
+    if (window._demoMode) { $('demo-notice').style.display = 'block'; }
+    updateStats();
+    refreshMonthFilter();
 
-    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    let list    = [...getList()];
+    const q     = $('search-input').value.toLowerCase().trim();
+    const fStat = $('filter-status').value;
+    const fMo   = $('filter-month').value;
 
-    // ─── INIT ─────────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      document.getElementById('topbar-date').textContent =
-        today.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      document.getElementById('f-date').value = today.toISOString().split('T')[0];
-      document.getElementById('e-date').value = today.toISOString().split('T')[0];
+    // Filter
+    if (q)     list = list.filter(e => [e.name,e.company,e.contact,e.remark].join(' ').toLowerCase().includes(q));
+    if (fStat) list = list.filter(e => e.status === fStat);
+    if (fMo)   list = list.filter(e => monthStr(e.date) === fMo);
 
-      // Set current month as default for Sales Records filter
-      const curM = String(today.getMonth() + 1).padStart(2, '0');
-      document.getElementById('filter-month').value = curM;
-
-      // Set current month as default for Dashboard filter
-      document.getElementById('dash-filter-month').value = curM;
-
-      populateYearFilter();
-      renderSalesTable();
-      renderEnquiryTable();
-      updateKPIs();
-      initCharts();
-
-      document.getElementById('f-banquet').addEventListener('change', function () {
-        document.getElementById('banquet-amount-group').style.display = this.value === 'Yes' ? 'flex' : 'none';
-      });
+    // Sort
+    list.sort((a,b) => {
+      let va = a[_sortKey], vb = b[_sortKey];
+      if (_sortKey === 'createdAt') {
+        va = va?.seconds || 0;
+        vb = vb?.seconds || 0;
+      }
+      if (va < vb) return _sortAsc ? -1 : 1;
+      if (va > vb) return _sortAsc ?  1 : -1;
+      return 0;
     });
 
-    // ─── NAV ──────────────────────────────────────────────────────
-    const titles = {
-      dashboard: 'Sales Dashboard',
-      analytics: 'Analytics',
-      entry: 'New Sales Entry',
-      records: 'Sales Records',
-      enquiry: 'Enquiry Manager'
+    const tbody = $('table-body');
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
+        <div class="icon">📋</div>
+        <p>No enquiries found. Add your first one above!</p>
+      </div></td></tr>`;
+      return;
+    }
+
+    const statusBadge = s => {
+      const map = {
+        'Active':       ['badge-done',   '🟢 Active'],
+        'Inactive':     ['badge-muted',  '⚫ Inactive'],
+        'Prospecting':  ['badge-new',    '🔵 Prospecting'],
+        'Negotiations': ['badge-follow', '🟠 Negotiations'],
+        'Completed':    ['badge-done',   '✅ Completed'],
+        'Conversion':   ['badge-gold',   '🌟 Conversion'],
+        // Legacy fallbacks
+        'Confirmed':    ['badge-done',   '✓ Confirmed'],
+        'Follow Up':    ['badge-follow', '↻ Follow Up'],
+        'New':          ['badge-new',    '● New'],
+      };
+      const [cls, label] = map[s] || ['badge-new', s || 'New'];
+      return `<span class="badge ${cls}">${label}</span>`;
     };
 
-    function switchTab(tab) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('sec-' + tab).classList.add('active');
-      document.getElementById('topbar-title').textContent = titles[tab] || 'Dashboard';
+    tbody.innerHTML = list.map((e, i) => `
+      <tr>
+        <td style="color:var(--muted);font-size:.78rem;">${i+1}</td>
+        <td><div class="cell-main">${fmtDate(e.date)}</div></td>
+        <td><div class="cell-main">${esc(e.name||'—')}</div></td>
+        <td><div class="cell-sub">${esc(e.company||'—')}</div></td>
+        <td>
+          <div class="cell-main">${esc(e.contact||'—')}</div>
+          <div class="cell-sub">
+            <a href="tel:${e.contact}" style="color:var(--wave);text-decoration:none;">📞 Call</a>
+            &nbsp;
+            <a href="https://wa.me/91${e.contact?.replace(/\D/g,'')}" target="_blank" style="color:var(--success);text-decoration:none;">💬 WA</a>
+          </div>
+        </td>
+        <td><div class="cell-main">${fmtDate(e.eventDate)}</div></td>
+        <td>${statusBadge(e.status)}</td>
+        <td><div class="remark-cell" title="${esc(e.remark||'')}">
+          ${esc(e.remark||'—')}
+        </div></td>
+        <td class="actions">
+          <button class="btn btn-outline btn-sm" onclick="openEdit('${e.id}')">✏️</button>
+          &nbsp;
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('${e.id}')">🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  };
 
-      if (tab === 'dashboard' || tab === 'analytics') {
-        setTimeout(() => { updateCharts(); }, 50);
-      }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ─────────────────────────────────────────────
+     SUBMIT FORM
+  ───────────────────────────────────────────── */
+  async function submitForm() {
+    const date         = $('f-date').value;
+    const name         = $('f-name').value.trim();
+    const company      = $('f-company').value.trim();
+    const contact      = $('f-contact').value.trim();
+    const eventDate    = $('f-event-date').value;
+    const remark       = ($('f-remark') && $('f-remark').value) ? $('f-remark').value.trim() : '';
+    const status       = $('f-status').value;
+    const eventName    = $('f-event-name').value.trim();
+    const eventType    = $('f-event-type').value;
+    const enquirySrc   = $('f-enquiry-source').value;
+    const bookingType  = $('f-booking-type').value;
+    const checkin      = $('f-checkin').value;
+    const checkout     = $('f-checkout').value;
+    const nights       = $('f-nights').value;
+    const rooms        = $('f-rooms').value;
+
+    if (!date || !name || !contact || !eventDate) {
+      toast('Please fill all required fields (marked with *)', 'error'); return;
     }
 
-    // ─── SAVE SALES ───────────────────────────────────────────────
-    function saveSalesEntry() {
-      const date = document.getElementById('f-date').value;
-      const particular = document.getElementById('f-particular').value.trim();
-      const rooms = parseInt(document.getElementById('f-rooms').value) || 0;
-      const nights = parseInt(document.getElementById('f-nights').value) || 0;
-      const extra = parseFloat(document.getElementById('f-extra').value) || 0;
-      const banquet = document.getElementById('f-banquet').value;
-      const banquetAmt = banquet === 'Yes' ? (parseFloat(document.getElementById('f-banquet-amount').value) || 0) : 0;
-      const contact = document.getElementById('f-contact').value.trim();
-      const total = parseFloat(document.getElementById('f-total').value) || 0;
-
-      if (!date || !particular || !total) {
-        showToast('Please fill in required fields: Date, Particular, Total Amount');
-        return;
-      }
-
-      salesData.push({ id: Date.now(), date, particular, rooms, nights, extra, banquet, banquetAmt, contact, total });
-      localStorage.setItem('devka_sales', JSON.stringify(salesData));
-
-      clearSalesForm();
-      renderSalesTable();
-      updateKPIs();
-      updateCharts();
-      showToast('Sales entry saved successfully!');
-      switchTabDirect('records');
-    }
-
-    function switchTabDirect(tab) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('sec-' + tab).classList.add('active');
-      document.getElementById('topbar-title').textContent = titles[tab] || 'Dashboard';
-    }
-
-    function clearSalesForm() {
-      ['f-particular', 'f-rooms', 'f-nights', 'f-extra', 'f-banquet-amount', 'f-contact', 'f-total'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      document.getElementById('f-banquet').value = 'No';
-      document.getElementById('banquet-amount-group').style.display = 'none';
-      document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-    }
-
-    // ─── RENDER SALES TABLE ───────────────────────────────────────
-    function renderSalesTable() {
-      const search = (document.getElementById('sales-search').value || '').toLowerCase();
-      const filterMonth = document.getElementById('filter-month').value;
-      const filterYear = document.getElementById('filter-year').value;
-
-      let filtered = salesData.filter(row => {
-        const d = row.date || '';
-        const matchSearch = !search ||
-          (row.particular || '').toLowerCase().includes(search) ||
-          d.includes(search) ||
-          (row.contact || '').includes(search);
-        const matchMonth = !filterMonth || d.split('-')[1] === filterMonth;
-        const matchYear = !filterYear || d.split('-')[0] === filterYear;
-        return matchSearch && matchMonth && matchYear;
-      });
-
-      filtered.sort((a, b) => {
-        let va = a[sortKey], vb = b[sortKey];
-        if (typeof va === 'string') va = va.toLowerCase();
-        if (typeof vb === 'string') vb = vb.toLowerCase();
-        if (va < vb) return sortAsc ? -1 : 1;
-        if (va > vb) return sortAsc ? 1 : -1;
-        return 0;
-      });
-
-      const tbody = document.getElementById('sales-table-body');
-      const empty = document.getElementById('sales-empty');
-
-      if (!filtered.length) {
-        tbody.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-      }
-      empty.style.display = 'none';
-
-      tbody.innerHTML = filtered.map((row, i) => `
-    <tr>
-      <td style="color:var(--text-light);font-size:12px;">${i + 1}<br><span style="font-weight:600;color:var(--navy);">${row.date}</span></td>
-      <td><strong>${row.particular}</strong></td>
-      <td style="text-align:center;">${row.rooms}</td>
-      <td style="text-align:center;">${row.nights}</td>
-      <td>${row.extra ? 'Rs. ' + row.extra.toLocaleString('en-IN') : '-'}</td>
-      <td>${row.banquet === 'Yes' ? '<span style="color:var(--teal);font-weight:600;">Yes – Rs. ' + row.banquetAmt.toLocaleString('en-IN') + '</span>' : 'No'}</td>
-      <td style="font-size:12.5px;">${row.contact || '-'}</td>
-      <td class="amount-cell">Rs. ${row.total.toLocaleString('en-IN')}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteSales(${row.id})">Delete</button></td>
-    </tr>
-  `).join('');
-    }
-
-    function sortTable(key) {
-      if (sortKey === key) sortAsc = !sortAsc;
-      else { sortKey = key; sortAsc = true; }
-      renderSalesTable();
-    }
-
-    function deleteSales(id) {
-      if (!confirm('Delete this entry?')) return;
-      salesData = salesData.filter(r => r.id !== id);
-      localStorage.setItem('devka_sales', JSON.stringify(salesData));
-      renderSalesTable();
-      updateKPIs();
-      updateCharts();
-      showToast('Entry deleted.');
-    }
-
-    // ─── YEAR FILTER POPULATION ───────────────────────────────────
-    function populateYearFilter() {
-      const sel = document.getElementById('filter-year');
-      const years = new Set(salesData.map(r => r.date.split('-')[0]));
-      years.add(new Date().getFullYear().toString());
-      [...years].sort((a, b) => b - a).forEach(y => {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        sel.appendChild(opt);
-      });
-    }
-
-    // ─── DASHBOARD UPDATE (month filter) ────────────────────────────
-    function updateDashboard() {
-      updateKPIs();
-      updateCharts();
-    }
-
-    // ─── KPIs ─────────────────────────────────────────────────────
-    function updateKPIs() {
-      const now = new Date();
-      const curY = String(now.getFullYear());
-
-      // Respect dashboard month filter
-      const dashMonth = (document.getElementById('dash-filter-month') || {}).value || '';
-
-      let mtd, ytd;
-      if (dashMonth) {
-        mtd = salesData.filter(r => r.date.startsWith(curY + '-' + dashMonth));
-      } else {
-        const curM = String(now.getMonth() + 1).padStart(2, '0');
-        mtd = salesData.filter(r => r.date.startsWith(curY + '-' + curM));
-      }
-      ytd = salesData.filter(r => r.date.startsWith(curY));
-
-      const mtdRev = mtd.reduce((s, r) => s + r.total, 0);
-      const mtdRooms = mtd.reduce((s, r) => s + r.rooms, 0);
-      const mtdNights = mtd.reduce((s, r) => s + r.nights, 0);
-      const ytdRev = ytd.reduce((s, r) => s + r.total, 0);
-      const ytdRooms = ytd.reduce((s, r) => s + r.rooms, 0);
-      const ytdNights = ytd.reduce((s, r) => s + r.nights, 0);
-
-      const fmt = v => 'Rs. ' + v.toLocaleString('en-IN');
-
-      // Update KPI label to reflect selected month
-      const monthSel = document.getElementById('dash-filter-month');
-      const monthLabel = monthSel && monthSel.value
-        ? (monthSel.options[monthSel.selectedIndex].text + ' Revenue')
-        : 'MTD Revenue';
-      const kpiMtdLabel = document.querySelector('#kpi-grid .kpi-card.gold .kpi-label');
-      if (kpiMtdLabel) kpiMtdLabel.textContent = monthLabel;
-      const kpiMtdSub = document.querySelector('#kpi-grid .kpi-card.gold .kpi-sub');
-      if (kpiMtdSub) kpiMtdSub.textContent = monthSel && monthSel.value ? 'Selected month' : 'Current month';
-
-      document.getElementById('kpi-mtd-rev').textContent = fmt(mtdRev);
-      document.getElementById('kpi-ytd-rev').textContent = fmt(ytdRev);
-      document.getElementById('kpi-mtd-rooms').textContent = mtdRooms;
-      document.getElementById('kpi-total-entries').textContent = salesData.length;
-
-      document.getElementById('mtd-rev-detail').textContent = fmt(mtdRev);
-      document.getElementById('mtd-rooms-detail').textContent = mtdRooms;
-      document.getElementById('mtd-nights-detail').textContent = mtdNights;
-
-      document.getElementById('ytd-rev-detail').textContent = fmt(ytdRev);
-      document.getElementById('ytd-rooms-detail').textContent = ytdRooms;
-      document.getElementById('ytd-nights-detail').textContent = ytdNights;
-
-      // Enquiry KPIs
-      const active = enquiryData.filter(e => e.status === 'Active').length;
-      const inactive = enquiryData.filter(e => e.status === 'Inactive').length;
-      document.getElementById('enq-total').textContent = enquiryData.length;
-      document.getElementById('enq-active').textContent = active;
-      document.getElementById('enq-inactive').textContent = inactive;
-    }
-
-    // ─── CHARTS ───────────────────────────────────────────────────
-    function getChartData() {
-      const now = new Date();
-      const curY = now.getFullYear();
-
-      // Daily last 14 days
-      const days = [];
-      const dailyRevs = [];
-      for (let i = 13; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const key = d.toISOString().split('T')[0];
-        days.push(d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }));
-        dailyRevs.push(salesData.filter(r => r.date === key).reduce((s, r) => s + r.total, 0));
-      }
-
-      // Monthly
-      const monthlyRevs = MONTHS.map((_, mi) => {
-        const m = String(mi + 1).padStart(2, '0');
-        return salesData.filter(r => r.date.startsWith(curY + '-' + m)).reduce((s, r) => s + r.total, 0);
-      });
-
-      // Occupancy
-      const monthlyRooms = MONTHS.map((_, mi) => {
-        const m = String(mi + 1).padStart(2, '0');
-        return salesData.filter(r => r.date.startsWith(curY + '-' + m)).reduce((s, r) => s + r.rooms, 0);
-      });
-
-      // Enquiry
-      const active = enquiryData.filter(e => e.status === 'Active').length;
-      const inactive = enquiryData.filter(e => e.status === 'Inactive').length;
-
-      return { days, dailyRevs, monthlyRevs, monthlyRooms, active, inactive };
-    }
-
-    const chartDefaults = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0B1E3D',
-          titleFont: { family: 'DM Sans', size: 12 },
-          bodyFont: { family: 'DM Sans', size: 12 },
-          padding: 10,
-          cornerRadius: 6
-        }
-      }
+    const record = {
+      date, name, company, contact, eventDate, remark, status,
+      eventName, eventType, enquirySrc, bookingType,
+      ...(bookingType === 'Table Booking + Room' ? { checkin, checkout, nights, rooms } : {})
     };
 
-    function initCharts() {
-      const d = getChartData();
-
-      // Line (dashboard)
-      lineChartInst = new Chart(document.getElementById('lineChart'), {
-        type: 'line',
-        data: {
-          labels: d.days,
-          datasets: [{
-            data: d.dailyRevs,
-            borderColor: '#1A7FA8',
-            backgroundColor: 'rgba(26,127,168,0.08)',
-            borderWidth: 2.5,
-            pointBackgroundColor: '#C8983A',
-            pointRadius: 4,
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rs.' + v.toLocaleString('en-IN') } }, x: { ticks: { font: { size: 10 } } } } }
-      });
-
-      // Bar (dashboard)
-      barChartInst = new Chart(document.getElementById('barChart'), {
-        type: 'bar',
-        data: {
-          labels: MONTHS.map(m => m.slice(0, 3)),
-          datasets: [{
-            data: d.monthlyRevs,
-            backgroundColor: MONTHS.map((_, i) => i === new Date().getMonth() ? '#C8983A' : 'rgba(26,127,168,0.7)'),
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rs.' + v.toLocaleString('en-IN') } } } }
-      });
-
-      // Pie (enquiry)
-      enqPieInst = new Chart(document.getElementById('enqPieChart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Active', 'Inactive'],
-          datasets: [{
-            data: [d.active || 0, d.inactive || 0],
-            backgroundColor: ['#1A8C5E', '#C0392B'],
-            borderWidth: 0,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, position: 'bottom', labels: { font: { family: 'DM Sans', size: 12 }, padding: 16 } },
-            tooltip: chartDefaults.plugins.tooltip
-          },
-          cutout: '68%'
-        }
-      });
-
-      // Analytics charts
-      lineChart2Inst = new Chart(document.getElementById('lineChart2'), {
-        type: 'line',
-        data: { labels: d.days, datasets: [{ data: d.dailyRevs, borderColor: '#1A7FA8', backgroundColor: 'rgba(26,127,168,0.08)', borderWidth: 2.5, pointBackgroundColor: '#C8983A', pointRadius: 4, fill: true, tension: 0.4 }] },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rs.' + v.toLocaleString('en-IN') } }, x: { ticks: { font: { size: 10 } } } } }
-      });
-
-      barChart2Inst = new Chart(document.getElementById('barChart2'), {
-        type: 'bar',
-        data: { labels: MONTHS.map(m => m.slice(0, 3)), datasets: [{ data: d.monthlyRevs, backgroundColor: '#1A7FA8', borderRadius: 6 }] },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rs.' + v.toLocaleString('en-IN') } } } }
-      });
-
-      occupancyInst = new Chart(document.getElementById('occupancyChart'), {
-        type: 'bar',
-        data: { labels: MONTHS.map(m => m.slice(0, 3)), datasets: [{ data: d.monthlyRooms, backgroundColor: '#C8983A', borderRadius: 6 }] },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true } } }
-      });
-
-      enqBarInst = new Chart(document.getElementById('enqBarChart'), {
-        type: 'bar',
-        data: {
-          labels: ['Active', 'Inactive'],
-          datasets: [{ data: [d.active, d.inactive], backgroundColor: ['#1A8C5E', '#C0392B'], borderRadius: 8 }]
-        },
-        options: { ...chartDefaults, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-      });
+    if (window._demoMode || !window._fns) {
+      _demoData.unshift({ id:'d'+(_demoCounter++), ...record, createdAt:{seconds: Date.now()/1000} });
+      toast('Entry added (Demo mode — configure Firebase to save permanently)');
+      clearForm();
+      renderTable();
+      return;
     }
 
-    function updateCharts() {
-      const d = getChartData();
-      [lineChartInst, lineChart2Inst].forEach(c => {
-        if (!c) return;
-        c.data.labels = d.days;
-        c.data.datasets[0].data = d.dailyRevs;
-        c.update();
-      });
-      [barChartInst, barChart2Inst].forEach(c => {
-        if (!c) return;
-        c.data.datasets[0].data = d.monthlyRevs;
-        c.update();
-      });
-      if (enqPieInst) { enqPieInst.data.datasets[0].data = [d.active, d.inactive]; enqPieInst.update(); }
-      if (occupancyInst) { occupancyInst.data.datasets[0].data = d.monthlyRooms; occupancyInst.update(); }
-      if (enqBarInst) { enqBarInst.data.datasets[0].data = [d.active, d.inactive]; enqBarInst.update(); }
+    try {
+      const { collection, addDoc, serverTimestamp } = window._fns;
+      await addDoc(collection(window._db, window._col), { ...record, createdAt: serverTimestamp() });
+      toast('Enquiry saved successfully!');
+      clearForm();
+    } catch(err) {
+      console.error(err);
+      toast('Error saving. Check Firebase config.', 'error');
+    }
+  }
+
+  function clearForm() {
+    ['f-name','f-company','f-contact','f-event-date','f-event-name',
+     'f-checkin','f-checkout','f-nights','f-rooms'].forEach(id => { if($(id)) $(id).value=''; });
+    if($('f-remark')) $('f-remark').value = '';
+    $('f-date').value = todayStr();
+    $('f-status').value = 'Active';
+    $('f-event-type').value = '';
+    $('f-enquiry-source').value = '';
+    $('f-booking-type').value = 'Table Booking';
+    toggleRoomFields();
+    toggleRemarksField();
+  }
+
+  /* ─────────────────────────────────────────────
+     DELETE
+  ───────────────────────────────────────────── */
+  async function deleteEntry(id) {
+    if (!confirm('Delete this enquiry? This cannot be undone.')) return;
+
+    if (window._demoMode || !window._fns) {
+      _demoData = _demoData.filter(e => e.id !== id);
+      toast('Deleted (Demo mode)'); renderTable(); return;
     }
 
-    // ─── EXPORT TO EXCEL ──────────────────────────────────────────
-    function exportToExcel() {
-      if (!salesData.length) { showToast('No sales data to export.'); return; }
-      const rows = salesData.map((r, i) => ({
-        'No.': i + 1,
-        'Date': r.date,
-        'Particular': r.particular,
-        'Rooms': r.rooms,
-        'Nights': r.nights,
-        'Extra Charges': r.extra,
-        'Banquet': r.banquet,
-        'Banquet Amount': r.banquetAmt,
-        'Contact': r.contact,
-        'Total Amount (Rs.)': r.total
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Sales Records');
-
-      const enqRows = enquiryData.map((e, i) => ({
-        'No.': i + 1,
-        'Date': e.date,
-        'Month': e.month,
-        'Date of Function': e.functionDate,
-        'Function Type': e.functionType || '',
-        'Name': e.name,
-        'Remark': e.remark,
-        'Status': e.status
-      }));
-      if (enqRows.length) {
-        const ws2 = XLSX.utils.json_to_sheet(enqRows);
-        XLSX.utils.book_append_sheet(wb, ws2, 'Enquiries');
-      }
-
-      XLSX.writeFile(wb, 'Devka_Beach_Resort_Sales.xlsx');
-      showToast('Excel file exported successfully!');
+    try {
+      const { doc, deleteDoc } = window._fns;
+      await deleteDoc(doc(window._db, window._col, id));
+      toast('Enquiry deleted.');
+    } catch(err) {
+      toast('Error deleting.', 'error');
     }
+  }
 
-    // ─── ENQUIRY ──────────────────────────────────────────────────
-    function saveEnquiry() {
-      const date = document.getElementById('e-date').value;
-      const month = document.getElementById('e-month').value;
-      const functionDate = document.getElementById('e-function-date').value;
-      const functionType = document.getElementById('e-function-type').value;
-      const name = document.getElementById('e-name').value.trim();
-      const remark = document.getElementById('e-remark').value.trim();
-      const status = document.getElementById('e-status').value;
-      const source = document.getElementById('e-source').value;
+  /* ─────────────────────────────────────────────
+     EDIT MODAL
+  ───────────────────────────────────────────── */
+  function openEdit(id) {
+    const e = getList().find(x => x.id === id);
+    if (!e) return;
+    _editId = id;
+    $('e-date').value       = e.date       || '';
+    $('e-name').value       = e.name       || '';
+    $('e-company').value    = e.company    || '';
+    $('e-contact').value    = e.contact    || '';
+    $('e-event-date').value = e.eventDate  || '';
+    $('e-status').value     = e.status     || 'New';
+    $('e-remark').value     = e.remark     || '';
+    $('edit-modal').classList.add('active');
+  }
 
-      if (!date || !name) { showToast('Please fill in Date and Name.'); return; }
-      if (!source) { showToast('Please select an Enquiry Source.'); return; }
+  function closeModal() {
+    $('edit-modal').classList.remove('active');
+    _editId = null;
+  }
 
-      const entry = { id: Date.now(), date, month, functionDate, functionType, name, remark, status, source };
-      enquiryData.push(entry);
-      localStorage.setItem('devka_enquiries', JSON.stringify(enquiryData));
-
-      // Save to Firebase
-      if (window.dbFirestore) {
-        window.dbFirestore.collection('enquiries').add(entry).catch(err => console.error('Firebase save error:', err));
-      }
-
-      clearEnquiryForm();
-      renderEnquiryTable();
-      updateKPIs();
-      updateCharts();
-      showToast('Enquiry saved successfully!');
-    }
-
-    function clearEnquiryForm() {
-      ['e-date', 'e-month', 'e-function-date', 'e-function-type', 'e-name', 'e-remark', 'e-source'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      document.getElementById('e-status').value = 'Active';
-      document.getElementById('e-date').value = new Date().toISOString().split('T')[0];
-    }
-
-    function renderEnquiryTable() {
-      const search = (document.getElementById('enq-search').value || '').toLowerCase();
-      const filterStatus = document.getElementById('enq-filter-status').value;
-
-      let filtered = enquiryData.filter(e => {
-        const matchSearch = !search ||
-          (e.name || '').toLowerCase().includes(search) ||
-          (e.remark || '').toLowerCase().includes(search) ||
-          (e.date || '').includes(search);
-        const matchStatus = !filterStatus || e.status === filterStatus;
-        return matchSearch && matchStatus;
-      });
-
-      const tbody = document.getElementById('enquiry-table-body');
-      const empty = document.getElementById('enq-empty');
-
-      if (!filtered.length) {
-        tbody.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-      }
-      empty.style.display = 'none';
-
-      tbody.innerHTML = filtered.map((e, i) => `
-    <tr>
-      <td style="color:var(--text-light);font-size:12px;">${i + 1}</td>
-      <td>${e.date}</td>
-      <td>${e.month || '-'}</td>
-      <td>${e.functionDate || '-'}</td>
-      <td>${e.functionType ? `<span style="display:inline-block;padding:2px 9px;border-radius:12px;font-size:11.5px;font-weight:600;background:rgba(26,127,168,0.1);color:var(--teal);">${e.functionType}</span>` : '-'}</td>
-      <td><strong>${e.name}</strong></td>
-      <td style="max-width:220px;font-size:12.5px;color:var(--text-muted);">${e.remark || '-'}</td>
-      <td>
-        <span class="badge ${e.status === 'Active' ? 'badge-active' : 'badge-inactive'}">
-          <span class="badge-dot"></span>${e.status}
-        </span>
-      </td>
-      <td style="display:flex;gap:6px;">
-        <button class="btn btn-sm" onclick="toggleEnquiryStatus(${e.id})"
-          style="background:${e.status === 'Active' ? 'var(--danger-bg)' : 'var(--success-bg)'};color:${e.status === 'Active' ? 'var(--danger)' : 'var(--success)'};border:none;font-size:11px;font-weight:600;border-radius:6px;padding:5px 10px;cursor:pointer;">
-          ${e.status === 'Active' ? 'Deactivate' : 'Activate'}
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="deleteEnquiry(${e.id})">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-    }
-
-    function toggleEnquiryStatus(id) {
-      const idx = enquiryData.findIndex(e => e.id === id);
-      if (idx < 0) return;
-      enquiryData[idx].status = enquiryData[idx].status === 'Active' ? 'Inactive' : 'Active';
-      localStorage.setItem('devka_enquiries', JSON.stringify(enquiryData));
-      renderEnquiryTable();
-      updateKPIs();
-      updateCharts();
-    }
-
-    function deleteEnquiry(id) {
-      if (!confirm('Delete this enquiry?')) return;
-      enquiryData = enquiryData.filter(e => e.id !== id);
-      localStorage.setItem('devka_enquiries', JSON.stringify(enquiryData));
-      renderEnquiryTable();
-      updateKPIs();
-      updateCharts();
-      showToast('Enquiry deleted.');
-    }
-
-    // ─── TOAST ────────────────────────────────────────────────────
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3000);
-    }
-  </script>
-  <!-- ─── FIREBASE ─────────────────────────────────────────────── -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAZWQvVy4O1tOK_7Ft95MjPCrYdOiQuTy0",
-      authDomain: "dbrenquiry-manager.firebaseapp.com",
-      projectId: "dbrenquiry-manager",
-      storageBucket: "dbrenquiry-manager.firebasestorage.app",
-      messagingSenderId: "644794117479",
-      appId: "1:644794117479:web:33b394211bc1c3c41413c2"
+  async function saveEdit() {
+    if (!_editId) return;
+    const data = {
+      date:      $('e-date').value,
+      name:      $('e-name').value.trim(),
+      company:   $('e-company').value.trim(),
+      contact:   $('e-contact').value.trim(),
+      eventDate: $('e-event-date').value,
+      status:    $('e-status').value,
+      remark:    $('e-remark').value.trim(),
     };
-    firebase.initializeApp(firebaseConfig);
-    window.dbFirestore = firebase.firestore();
-  </script>
+
+    if (window._demoMode || !window._fns) {
+      const i = _demoData.findIndex(e => e.id === _editId);
+      if (i > -1) _demoData[i] = { ..._demoData[i], ...data };
+      toast('Updated (Demo mode)'); closeModal(); renderTable(); return;
+    }
+
+    try {
+      const { doc, updateDoc } = window._fns;
+      await updateDoc(doc(window._db, window._col, _editId), data);
+      toast('Enquiry updated!'); closeModal();
+    } catch(err) {
+      toast('Error updating.', 'error');
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     EXCEL EXPORT
+  ───────────────────────────────────────────── */
+  function exportExcel() {
+    const list = getList();
+    if (!list.length) { toast('No data to export.', 'error'); return; }
+
+    const headers = ['#','Date of Enquiry','Guest Name','Company','Contact Number','Event Date','Status','Remarks / Requirements'];
+    const rows = list.map((e,i) => [
+      i+1,
+      e.date      ? new Date(e.date).toLocaleDateString('en-IN') : '',
+      e.name      || '',
+      e.company   || '',
+      e.contact   || '',
+      e.eventDate ? new Date(e.eventDate).toLocaleDateString('en-IN') : '',
+      e.status    || '',
+      e.remark    || '',
+    ]);
+
+    const wsData = [headers, ...rows];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths
+    ws['!cols'] = [
+      {wch:4},{wch:16},{wch:22},{wch:22},{wch:16},{wch:16},{wch:12},{wch:40}
+    ];
+
+    // Style header row
+    headers.forEach((_, ci) => {
+      const cell = XLSX.utils.encode_cell({r:0, c:ci});
+      if (!ws[cell]) return;
+      ws[cell].s = {
+        font:    { bold:true, color:{rgb:'FFFFFF'} },
+        fill:    { fgColor:{rgb:'1A4A5C'} },
+        alignment: { horizontal:'center', vertical:'center' }
+      };
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Enquiries');
+
+    const today = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `Devka_Beach_Resort_Enquiries_${today}.xlsx`);
+    toast(`Exported ${list.length} enquiry records to Excel!`);
+  }
+
+  /* ─────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────── */
+  // Close modal on overlay click
+  $('edit-modal').addEventListener('click', e => {
+    if (e.target === $('edit-modal')) closeModal();
+  });
+
+  // Auto-fill current date (read-only)
+  $('f-date').value = todayStr();
+
+  // Initialise conditional field visibility
+  toggleRoomFields();
+  toggleRemarksField();
+
+  /* ── CONDITIONAL SHOW/HIDE LOGIC ── */
+  function toggleRoomFields() {
+    const isRoom = $('f-booking-type').value === 'Table Booking + Room';
+    document.querySelectorAll('.room-field').forEach(el => {
+      el.style.display = isRoom ? 'flex' : 'none';
+    });
+  }
+
+  function toggleRemarksField() {
+    const isActive = $('f-status').value === 'Active';
+    $('f-remarks-group').style.display = isActive ? 'flex' : 'none';
+  }
+
+  function calcNights() {
+    const ci = $('f-checkin').value;
+    const co = $('f-checkout').value;
+    if (ci && co) {
+      const diff = (new Date(co) - new Date(ci)) / (1000 * 60 * 60 * 24);
+      $('f-nights').value = diff > 0 ? Math.ceil(diff) : '';
+    }
+  }
+
+  // Expose to global scope so inline onchange works
+  window.toggleRoomFields   = toggleRoomFields;
+  window.toggleRemarksField = toggleRemarksField;
+  window.calcNights         = calcNights;
+
+  // Initial render (before Firebase loads)
+  setTimeout(() => {
+    renderTable();
+  }, 800);
+</script>
 </body>
-
 </html>
